@@ -1,4 +1,9 @@
 import { useState, useEffect } from "react";
+import { auth } from "./firebase";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import Login from "./Login";
+import Signup from "./Signup";
+
 
 // ─── Hardcoded Data ──────────────────────────────────────────────────────────
 const LOTS = [
@@ -255,10 +260,23 @@ export default function App() {
   const [reservations, setReservations] = useState([]);
   const [tab, setTab] = useState("map");
 
+  // added for login/signup authentication state
+  const [user, setUser] = useState(null);
+  const [authTab, setAuthTab] = useState("login");
+
   const currentLot = lots.find((l) => l.id === selectedLotId);
   const totalAvail = lots.reduce((sum, l) => sum + getAvailable(l), 0);
   const totalSpaces = lots.reduce((sum, l) => sum + l.totalSpaces, 0);
   const peak = isPeakHour();
+
+  // firebase listener
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+
+    return unsubscribe;
+  }, []); 
 
   function handleConfirm(space, hours, total) {
     setLots((prev) =>
@@ -288,6 +306,59 @@ export default function App() {
     setToast(`Reserved ${space.label} at ${currentLot.name} — $${total}`);
   }
 
+  // logout function
+  const handleLogout = async () => {
+    await signOut(auth);
+    setToast("Logged out successfully");
+  };
+
+  // if user is not logged in, show login/signup UI
+if (!user) {
+  return (
+    <div style={s.authRoot}>
+      <div style={s.authWrapper}>
+
+        <div style={s.logoAuth}>
+          <div style={s.logoMark}>S</div>
+          <span style={s.logoText}>SpotFree</span>
+        </div>
+
+        <div style={s.authBox}>
+          {authTab === "login" ? (
+            <>
+              <Login />
+              <p style={s.authToggle}>
+                Don't have an account?
+                <button
+                  style={s.authLinkBtn}
+                  onClick={() => setAuthTab("signup")}
+                >
+                  Sign Up
+                </button>
+              </p>
+            </>
+          ) : (
+            <>
+              <Signup />
+              <p style={s.authToggle}>
+                Already have an account?
+                <button
+                  style={s.authLinkBtn}
+                  onClick={() => setAuthTab("login")}
+                >
+                  Login
+                </button>
+              </p>
+            </>
+          )}
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+  // Main app UI
   return (
     <div style={s.root}>
       {/* Header */}
@@ -297,6 +368,15 @@ export default function App() {
           <span style={s.logoText}>SpotFree</span>
         </div>
 
+        {/* Logged-in user info */}
+        <div style={s.userInfo}>
+          <span>Logged in as {user.email}</span>
+          <button style={s.logoutBtn} onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
+
+        {/* Stats */}
         <div style={s.headerStats}>
           <div style={s.stat}>
             <span style={s.statNum}>{totalAvail}</span>
@@ -316,6 +396,7 @@ export default function App() {
           </div>
         </div>
 
+        {/* Navigation */}
         <nav style={s.nav}>
           <button
             style={{ ...s.navBtn, ...(tab === "map" ? s.navBtnActive : {}) }}
@@ -324,16 +405,11 @@ export default function App() {
             Map
           </button>
           <button
-            style={{
-              ...s.navBtn,
-              ...(tab === "reservations" ? s.navBtnActive : {}),
-            }}
+            style={{ ...s.navBtn, ...(tab === "reservations" ? s.navBtnActive : {}) }}
             onClick={() => setTab("reservations")}
           >
             My Reservations
-            {reservations.length > 0 && (
-              <span style={s.navBadge}>{reservations.length}</span>
-            )}
+            {reservations.length > 0 && <span style={s.navBadge}>{reservations.length}</span>}
           </button>
         </nav>
       </header>
@@ -401,24 +477,16 @@ export default function App() {
                   }}
                 >
                   {peak ? "⚠ Peak" : "✓ Off-Peak"} — $
-                  {peak
-                    ? currentLot.peakRate.toFixed(2)
-                    : currentLot.baseRate.toFixed(2)}
+                  {peak ? currentLot.peakRate.toFixed(2) : currentLot.baseRate.toFixed(2)}
                   /hr
                 </div>
               </div>
               <div style={s.grid}>
                 {currentLot.spaces.map((space) => (
-                  <SpaceCell
-                    key={space.id}
-                    space={space}
-                    onSelect={setSelectedSpace}
-                  />
+                  <SpaceCell key={space.id} space={space} onSelect={setSelectedSpace} />
                 ))}
               </div>
-              <p style={s.gridHint}>
-                Click a green space to make a reservation
-              </p>
+              <p style={s.gridHint}>Click a green space to make a reservation</p>
             </section>
           </>
         ) : (
@@ -453,6 +521,7 @@ export default function App() {
         )}
       </main>
 
+      {/* Modals */}
       {selectedSpace && (
         <ReserveModal
           space={selectedSpace}
@@ -519,7 +588,7 @@ const s = {
   nav: { display: "flex", gap: 6 },
   navBtn: {
     background: "none",
-    border: "1px solid #e5e7eb",
+    border: "1px solid #e7ebe5",
     color: "#6b7280",
     padding: "6px 14px",
     borderRadius: 6,
@@ -528,6 +597,7 @@ const s = {
     display: "flex",
     alignItems: "center",
     gap: 6,
+    transition: "all 0.2s ease",
   },
   navBtnActive: {
     borderColor: "#16a34a",
@@ -851,4 +921,54 @@ const s = {
     padding: "2px 8px",
     display: "inline-block",
   },
+authRoot: {
+  minHeight: "100vh",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  background: "#f9fafb",
+},
+
+authWrapper: {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: 20,
+},
+
+logoAuth: {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+},
+
+authBox: {
+  width: 380,
+  padding: 36,
+  borderRadius: 10,
+  border: "1px solid #e5e7eb",
+  background: "#fff",
+  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.35)",
+  textAlign: "center",
+},
+
+authToggle: {
+  marginTop: 22,
+  fontSize: 13,
+  color: "#6b7280",
+},
+
+authLinkBtn: {
+  border: "none",
+  background: "none",
+  color: "#16a34a",
+  fontSize: 13,
+  fontWeight: 600,
+  cursor: "pointer",
+  marginLeft: 6,
+},
+
+authLinkBtnHover: {
+  opacity: 0.8,
+},
 };
