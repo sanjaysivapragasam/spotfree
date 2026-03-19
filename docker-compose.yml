@@ -1,0 +1,102 @@
+services:
+
+  # ─── DATABASE ───────────────────────────────────────────────────────────────
+  db:
+    image: postgres:15
+    container_name: spotfree-db
+    restart: always
+    environment:
+      POSTGRES_DB: spotfree
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  # ─── MESSAGE BROKER ─────────────────────────────────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: spotfree-rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"     # services connect here
+      - "15672:15672"   # web dashboard: localhost:15672 (guest/guest)
+
+  # ─── PARKING LOT SERVICE ────────────────────────────────────────────────────
+  parking-lot:
+    build: ./services/parking-lot
+    container_name: spotfree-parking-lot
+    restart: always
+    ports:
+      - "8001:8000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://admin:secret@db:5432/spotfree
+
+  # ─── RESERVATION SERVICE ────────────────────────────────────────────────────
+  reservation:
+    build: ./services/reservation
+    container_name: spotfree-reservation
+    restart: always
+    ports:
+      - "8002:8000"
+    depends_on:
+      - db
+      - parking-lot
+    environment:
+      DATABASE_URL: postgresql://admin:secret@db:5432/spotfree
+      PARKING_LOT_URL: http://parking-lot:8000
+
+  # ─── PRICING SERVICE ────────────────────────────────────────────────────────
+  pricing:
+    build: ./services/pricing
+    container_name: spotfree-pricing
+    restart: always
+    ports:
+      - "8003:8000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://admin:secret@db:5432/spotfree
+
+  # ─── USER SERVICE ───────────────────────────────────────────────────────────
+  user:
+    build: ./services/user
+    container_name: spotfree-user
+    restart: always
+    ports:
+      - "8004:8000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://admin:secret@db:5432/spotfree
+      SECRET_KEY: supersecretjwtkey
+
+  # ─── NOTIFICATION SERVICE ───────────────────────────────────────────────────
+  notification:
+    build: ./services/notification
+    container_name: spotfree-notification
+    restart: always
+    depends_on:
+      - rabbitmq
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+
+  # ─── FRONTEND ───────────────────────────────────────────────────────────────
+  frontend:
+    build: ./frontend
+    container_name: spotfree-frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - parking-lot
+      - reservation
+      - pricing
+      - user
+
+volumes:
+  postgres_data:
