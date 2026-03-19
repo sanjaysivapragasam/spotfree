@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="User Service")
+app = FastAPI(title="Pricing Service")
 
 app.add_middleware(
     CORSMiddleware,
@@ -12,4 +12,4 @@ app.add_middleware(
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "user"}
+    return {"status": "ok", "service": "pricing"}
