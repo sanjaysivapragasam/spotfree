@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS parking_lots (
     created_at  TIMESTAMP DEFAULT NOW()
 );
 
+-- parking lot to space is 1 to many relationship
 -- Individual Parking Spaces inside a lot
 CREATE TABLE IF NOT EXISTS parking_spaces (
     id          SERIAL PRIMARY KEY,
