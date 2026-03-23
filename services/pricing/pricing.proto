@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+service PricingService {
+
+  rpc CalculatePrice (PriceReq) returns (PriceRsp);
+}
+
+message PriceReq {
+  int32 lot_id = 1;
+  string start_time = 2;
+  string end_time = 3;
+}
+
+message PriceRsp {
+  double total = 1;
+  string rate_type = 2;
+  int32 hours = 3;
+}
