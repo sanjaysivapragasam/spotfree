@@ -34,7 +34,7 @@ def get_db():
     # inisde Docker, it uses the env variable which points
     # to db, the container name
     return psycopg2.connect(os.environ.get(
-        # enviornment variables are writting in all caps
+        # enviornment variables are writing in all caps
         "DATABASE_URL",
         # 5432 is PostgreSQL default port
         "postgresql://admin:secret@localhost:5432/spotfree"

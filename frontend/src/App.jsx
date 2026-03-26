@@ -278,33 +278,56 @@ export default function App() {
     return unsubscribe;
   }, []); 
 
-  function handleConfirm(space, hours, total) {
-    setLots((prev) =>
-      prev.map((lot) =>
-        lot.id === currentLot.id
-          ? {
-              ...lot,
-              spaces: lot.spaces.map((sp) =>
-                sp.id === space.id ? { ...sp, occupied: true } : sp,
-              ),
-            }
-          : lot,
-      ),
-    );
-    setReservations((prev) => [
-      {
-        id: Date.now(),
-        space: space.label,
-        lot: currentLot.name,
-        hours,
-        total,
-        time: new Date().toLocaleTimeString(),
-      },
-      ...prev,
-    ]);
-    setSelectedSpace(null);
-    setToast(`Reserved ${space.label} at ${currentLot.name} — $${total}`);
+  async function handleConfirm(space, hours, total) {
+  // ── Call the reservation service ──────────────────────────────
+  const now = new Date();
+  const end = new Date(now.getTime() + hours * 60 * 60 * 1000);
+
+  const response = await fetch("http://localhost:8003/reservations", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_id: 1,
+      space_id: space.id,
+      start_time: now.toISOString(),
+      end_time: end.toISOString()
+    })
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    setToast(`Booking failed: ${err.detail}`);
+    return; // stop here, don't update the UI
   }
+  // ──────────────────────────────────────────────────────────────
+
+  // everything below is unchanged
+  setLots((prev) =>
+    prev.map((lot) =>
+      lot.id === currentLot.id
+        ? {
+            ...lot,
+            spaces: lot.spaces.map((sp) =>
+              sp.id === space.id ? { ...sp, occupied: true } : sp,
+            ),
+          }
+        : lot,
+    ),
+  );
+  setReservations((prev) => [
+    {
+      id: Date.now(),
+      space: space.label,
+      lot: currentLot.name,
+      hours,
+      total,
+      time: new Date().toLocaleTimeString(),
+    },
+    ...prev,
+  ]);
+  setSelectedSpace(null);
+  setToast(`Reserved ${space.label} at ${currentLot.name} — $${total}`);
+}
 
   // logout function
   const handleLogout = async () => {
