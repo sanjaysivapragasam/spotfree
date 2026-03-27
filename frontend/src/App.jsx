@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import { auth } from "./firebase";
-import { onAuthStateChanged, signOut } from "firebase/auth";
 import Login from "./Login";
 import Signup from "./Signup";
 
@@ -260,126 +258,133 @@ export default function App() {
   const [reservations, setReservations] = useState([]);
   const [tab, setTab] = useState("map");
 
-  // added for login/signup authentication state
-  const [user, setUser] = useState(null);
+  // ── Auth state (localStorage instead of Firebase) ──────────────────────────
+  const [user, setUser] = useState(() => {
+    const stored = localStorage.getItem("spotfree_user");
+    return stored ? JSON.parse(stored) : null;
+  });
   const [authTab, setAuthTab] = useState("login");
+  const [ready, setReady] = useState(false);
+
+  // Mark app as ready after first render to prevent blank flash
+  useEffect(() => {
+    setReady(true);
+  }, []);
+
+  function handleLogin(userData) {
+    localStorage.setItem("spotfree_user", JSON.stringify(userData));
+    setUser(userData);
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("spotfree_user");
+    setUser(null);
+    setToast("Logged out successfully");
+  };
+  // ───────────────────────────────────────────────────────────────────────────
 
   const currentLot = lots.find((l) => l.id === selectedLotId);
   const totalAvail = lots.reduce((sum, l) => sum + getAvailable(l), 0);
   const totalSpaces = lots.reduce((sum, l) => sum + l.totalSpaces, 0);
   const peak = isPeakHour();
 
-  // firebase listener
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+  async function handleConfirm(space, hours, total) {
+    const now = new Date();
+    const end = new Date(now.getTime() + hours * 60 * 60 * 1000);
+
+    const response = await fetch("http://localhost:8002/reservations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: user.id,
+        space_id: space.id,
+        start_time: now.toISOString(),
+        end_time: end.toISOString()
+      })
     });
 
-    return unsubscribe;
-  }, []); 
+    if (!response.ok) {
+      const err = await response.json();
+      setToast(`Booking failed: ${err.detail}`);
+      return;
+    }
 
-  async function handleConfirm(space, hours, total) {
-  // ── Call the reservation service ──────────────────────────────
-  const now = new Date();
-  const end = new Date(now.getTime() + hours * 60 * 60 * 1000);
-
-  const response = await fetch("http://localhost:8003/reservations", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      user_id: 1,
-      space_id: space.id,
-      start_time: now.toISOString(),
-      end_time: end.toISOString()
-    })
-  });
-
-  if (!response.ok) {
-    const err = await response.json();
-    setToast(`Booking failed: ${err.detail}`);
-    return; // stop here, don't update the UI
+    setLots((prev) =>
+      prev.map((lot) =>
+        lot.id === currentLot.id
+          ? {
+              ...lot,
+              spaces: lot.spaces.map((sp) =>
+                sp.id === space.id ? { ...sp, occupied: true } : sp,
+              ),
+            }
+          : lot,
+      ),
+    );
+    setReservations((prev) => [
+      {
+        id: Date.now(),
+        space: space.label,
+        lot: currentLot.name,
+        hours,
+        total,
+        time: new Date().toLocaleTimeString(),
+      },
+      ...prev,
+    ]);
+    setSelectedSpace(null);
+    setToast(`Reserved ${space.label} at ${currentLot.name} — $${total}`);
   }
-  // ──────────────────────────────────────────────────────────────
 
-  // everything below is unchanged
-  setLots((prev) =>
-    prev.map((lot) =>
-      lot.id === currentLot.id
-        ? {
-            ...lot,
-            spaces: lot.spaces.map((sp) =>
-              sp.id === space.id ? { ...sp, occupied: true } : sp,
-            ),
-          }
-        : lot,
-    ),
-  );
-  setReservations((prev) => [
-    {
-      id: Date.now(),
-      space: space.label,
-      lot: currentLot.name,
-      hours,
-      total,
-      time: new Date().toLocaleTimeString(),
-    },
-    ...prev,
-  ]);
-  setSelectedSpace(null);
-  setToast(`Reserved ${space.label} at ${currentLot.name} — $${total}`);
-}
+  // Prevent blank flash on first render
+  if (!ready) return null;
 
-  // logout function
-  const handleLogout = async () => {
-    await signOut(auth);
-    setToast("Logged out successfully");
-  };
+  // If user is not logged in, show login/signup UI
+  if (!user) {
+    return (
+      <div style={s.authRoot}>
+        <div style={s.authWrapper}>
 
-  // if user is not logged in, show login/signup UI
-if (!user) {
-  return (
-    <div style={s.authRoot}>
-      <div style={s.authWrapper}>
+          <div style={s.logoAuth}>
+            <div style={s.logoMark}>S</div>
+            <span style={s.logoText}>SpotFree</span>
+          </div>
 
-        <div style={s.logoAuth}>
-          <div style={s.logoMark}>S</div>
-          <span style={s.logoText}>SpotFree</span>
+          <div style={s.authBox}>
+            {authTab === "login" ? (
+              <>
+                <Login onLogin={handleLogin} />
+                <p style={s.authToggle}>
+                  Don't have an account?
+                  <button
+                    style={s.authLinkBtn}
+                    onClick={() => setAuthTab("signup")}
+                  >
+                    Sign Up
+                  </button>
+                </p>
+              </>
+            ) : (
+              <>
+                <Signup onLogin={handleLogin} />
+                <p style={s.authToggle}>
+                  Already have an account?
+                  <button
+                    style={s.authLinkBtn}
+                    onClick={() => setAuthTab("login")}
+                  >
+                    Login
+                  </button>
+                </p>
+              </>
+            )}
+          </div>
+
         </div>
-
-        <div style={s.authBox}>
-          {authTab === "login" ? (
-            <>
-              <Login />
-              <p style={s.authToggle}>
-                Don't have an account?
-                <button
-                  style={s.authLinkBtn}
-                  onClick={() => setAuthTab("signup")}
-                >
-                  Sign Up
-                </button>
-              </p>
-            </>
-          ) : (
-            <>
-              <Signup />
-              <p style={s.authToggle}>
-                Already have an account?
-                <button
-                  style={s.authLinkBtn}
-                  onClick={() => setAuthTab("login")}
-                >
-                  Login
-                </button>
-              </p>
-            </>
-          )}
-        </div>
-
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   // Main app UI
   return (
@@ -393,7 +398,7 @@ if (!user) {
 
         {/* Logged-in user info */}
         <div style={s.userInfo}>
-          <span>Logged in as {user.email}</span>
+          <span>Welcome, {user.name} ({user.email})</span>
           <button style={s.logoutBtn} onClick={handleLogout}>
             Logout
           </button>
@@ -593,6 +598,22 @@ const s = {
     fontSize: 15,
   },
   logoText: { fontSize: 16, fontWeight: 700, color: "#111" },
+  userInfo: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    fontSize: 13,
+    color: "#6b7280",
+  },
+  logoutBtn: {
+    padding: "5px 12px",
+    borderRadius: 6,
+    border: "1px solid #e5e7eb",
+    background: "#fff",
+    color: "#6b7280",
+    fontSize: 12,
+    cursor: "pointer",
+  },
   headerStats: {
     display: "flex",
     alignItems: "center",
@@ -944,54 +965,45 @@ const s = {
     padding: "2px 8px",
     display: "inline-block",
   },
-authRoot: {
-  minHeight: "100vh",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  background: "#f9fafb",
-},
-
-authWrapper: {
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  gap: 20,
-},
-
-logoAuth: {
-  display: "flex",
-  alignItems: "center",
-  gap: 10,
-},
-
-authBox: {
-  width: 380,
-  padding: 36,
-  borderRadius: 10,
-  border: "1px solid #e5e7eb",
-  background: "#fff",
-  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.35)",
-  textAlign: "center",
-},
-
-authToggle: {
-  marginTop: 22,
-  fontSize: 13,
-  color: "#6b7280",
-},
-
-authLinkBtn: {
-  border: "none",
-  background: "none",
-  color: "#16a34a",
-  fontSize: 13,
-  fontWeight: 600,
-  cursor: "pointer",
-  marginLeft: 6,
-},
-
-authLinkBtnHover: {
-  opacity: 0.8,
-},
+  authRoot: {
+    minHeight: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    background: "#f9fafb",
+  },
+  authWrapper: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 20,
+  },
+  logoAuth: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+  },
+  authBox: {
+    width: 380,
+    padding: 36,
+    borderRadius: 10,
+    border: "1px solid #e5e7eb",
+    background: "#fff",
+    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.35)",
+    textAlign: "center",
+  },
+  authToggle: {
+    marginTop: 22,
+    fontSize: 13,
+    color: "#6b7280",
+  },
+  authLinkBtn: {
+    border: "none",
+    background: "none",
+    color: "#16a34a",
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: "pointer",
+    marginLeft: 6,
+  },
 };
