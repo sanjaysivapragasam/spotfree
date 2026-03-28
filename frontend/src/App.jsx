@@ -197,36 +197,6 @@ export default function App() {
     setReady(true);
   }, []);
 
-  // useEffect for fetching all of the lots
-  // this runs once, when the App first loads
-  // calls the parking lot service to get the JSON array of all the lots and their data, and puts it into state
-  useEffect(() => {
-    fetch("http://localhost:8001/lots")
-      .then((res) => res.json())
-      .then((data) => {
-        // Backend uses snake_case, frontend expects camelCase
-        // so the fields need to be mapped
-        // the different rates from pricing service
-        const rates = {
-          1: { baseRate: 3.0, peakRate: 6.0 },
-          2: { baseRate: 2.0, peakRate: 4.5 },
-          3: { baseRate: 5.0, peakRate: 8.0 },
-        };
-        const mapped = data.map((lot) => ({
-          id: lot.id,
-          name: lot.name,
-          location: lot.location,
-          totalSpaces: lot.total_spaces,
-          availableSpaces: lot.available_spaces,
-          baseRate: rates[lot.id]?.baseRate ?? 3.0,
-          peakRate: rates[lot.id]?.peakRate ?? 6.0,
-          spaces: [], // loaded separately
-        }));
-        setLots(mapped);
-        if (mapped.length > 0) setSelectedLotId(mapped[0].id);
-      });
-  }, []); // empty [] at the end means run once (don't re-run)
-
   // use effect for if the selectedLotId changes, so if the user clicks a different lot in the sidebar
   // the if statement prevents it running before a lot is selected
   useEffect(() => {

@@ -65,7 +65,7 @@ class PricingService(pricing_pb2_grpc.PricingServiceServicer):
         lot_id = request.lot_id
         start_time = datetime.fromisoformat(request.start_time)
         end_time = datetime.fromisoformat(request.end_time)
-        hours = int((end_time - start_time).total_seconds() / 3600)
+        hours = round((end_time - start_time).total_seconds() / 3600)
 
         # query the pricing_rules table for the given lot
         cur.execute("""
@@ -95,7 +95,7 @@ class PricingService(pricing_pb2_grpc.PricingServiceServicer):
             rate_type = "off-peak"
 
         # calculate total cost
-        total = rate * hours # total price for set number of hours
+        total = round(rate * hours, 2) # total price for set number of hours
 
         # close DB resources
         cur.close()
