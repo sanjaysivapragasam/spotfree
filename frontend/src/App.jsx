@@ -493,7 +493,10 @@ export default function App() {
         <nav style={s.nav}>
           <button
             style={{ ...s.navBtn, ...(tab === "map" ? s.navBtnActive : {}) }}
-            onClick={() => setTab("map")}
+            onClick={() => {
+              setTab("map");
+              localStorage.setItem("spotfree_tab", "map");
+            }}
           >
             Map
           </button>
@@ -502,7 +505,10 @@ export default function App() {
               ...s.navBtn,
               ...(tab === "reservations" ? s.navBtnActive : {}),
             }}
-            onClick={() => setTab("reservations")}
+            onClick={() => {
+              setTab("reservations");
+              localStorage.setItem("spotfree_tab", "reservations");
+            }}
           >
             My Reservations
             {reservations.length > 0 && (
@@ -601,7 +607,13 @@ export default function App() {
             {reservations.length === 0 ? (
               <div style={s.emptyState}>
                 <p style={s.emptyText}>No reservations yet.</p>
-                <button style={s.confirmBtn} onClick={() => setTab("map")}>
+                <button
+                  style={s.confirmBtn}
+                  onClick={() => {
+                    setTab("map");
+                    localStorage.setItem("spotfree_tab", "map");
+                  }}
+                >
                   Find a Space
                 </button>
               </div>
