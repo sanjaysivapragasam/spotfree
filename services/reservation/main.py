@@ -227,7 +227,7 @@ def create_reservation(body: ReservationCreate):
     return reservation
 
 
-@app.get("/reservations/user/{user_id}", response_model=List[Reservation])
+@app.get("/reservations/user/{user_id}")
 def get_user_reservations(user_id: int):
     # Returns all reservations for a given user, most recent first.
     # Called by the frontend to show a user's booking history.
