@@ -1,5 +1,6 @@
 # import generated classes
 import grpc
+import os
 from concurrent import futures
 import pricing_pb2
 import pricing_pb2_grpc
@@ -7,6 +8,7 @@ import psycopg2  # for PostgreSQL
 from datetime import datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import threading
 
 # create the application
 app = FastAPI(title="Pricing Service")
@@ -79,7 +81,7 @@ class PricingService(pricing_pb2_grpc.PricingServiceServicer):
             context.set_details('Lot ID not found')
             cur.close()
             conn.close()
-            return pricing_pb2.PriceResponse()
+            return pricing_pb2.PriceRsp()
         
         # extract pricing information
         base_rate, peak_rate, peak_start, peak_end = row
@@ -100,7 +102,7 @@ class PricingService(pricing_pb2_grpc.PricingServiceServicer):
         conn.close()
 
         # return the gRPC response - including total price, rate type, and number of hours
-        return pricing_pb2.PriceResponse(
+        return pricing_pb2.PriceRsp(
             total=total,
             rate_type=rate_type,
             hours=hours
