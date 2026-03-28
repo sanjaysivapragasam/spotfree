@@ -235,15 +235,16 @@ def get_user_reservations(user_id: int):
     conn = get_db()
     cur = conn.cursor()
     # Query to get the reservations of a particular user.
-    cur.execute(
-        """
-        SELECT id, user_id, space_id, start_time, end_time, status, total_price, created_at
-        FROM reservations
-        WHERE user_id = %s
-        ORDER BY created_at DESC
-        """,
-        (user_id,)
-    )
+    cur.execute("""
+        SELECT r.id, r.user_id, r.space_id, r.start_time, r.end_time, 
+            r.status, r.total_price, r.created_at,
+            ps.space_number, pl.name as lot_name
+        FROM reservations r
+        JOIN parking_spaces ps ON ps.id = r.space_id
+        JOIN parking_lots pl ON pl.id = ps.lot_id
+        WHERE r.user_id = %s
+        ORDER BY r.created_at DESC
+    """, (user_id,))
     rows = cur.fetchall()
     conn.close()
 
@@ -253,18 +254,20 @@ def get_user_reservations(user_id: int):
 
     # Organizing the SQL data into a Python dictionary to be returned when a get user reservations request is made.
     return [
-        Reservation(
-            id=r[0],
-            user_id=r[1],
-            space_id=r[2],
-            start_time=r[3],
-            end_time=r[4],
-            status=r[5],
-            total_price=float(r[6]),
-            created_at=r[7]
-        )
-        for r in rows
-    ]
+    {
+        "id": r[0],
+        "user_id": r[1],
+        "space_id": r[2],
+        "start_time": r[3],
+        "end_time": r[4],
+        "status": r[5],
+        "total_price": float(r[6]),
+        "created_at": r[7],
+        "space_number": r[8],
+        "lot_name": r[9]
+    }
+    for r in rows
+]
 
 
 @app.delete("/reservations/{reservation_id}")

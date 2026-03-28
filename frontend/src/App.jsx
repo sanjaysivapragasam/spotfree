@@ -257,7 +257,7 @@ export default function App() {
         const mapped = data.map((r) => ({
           id: r.id,
           space: r.space_id,
-          lot: "—",
+          lot: r.lot_name,
           hours: Math.round(
             (new Date(r.end_time) - new Date(r.start_time)) / 3600000,
           ),
