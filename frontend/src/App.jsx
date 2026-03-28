@@ -9,7 +9,7 @@ function getAvailable(lot) {
   return lot.availableSpaces ?? 0;
 }
 
-function isPeakHour() {
+function isPeakHourForLot() {
   const h = new Date().getHours();
   return h >= lot.peakStart && h < lot.peakEnd;
 }
