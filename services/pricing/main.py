@@ -133,7 +133,7 @@ def serve():
 # used to trigger launching the grpc server in a background thread once uvicorn starts FastAPI
 @app.on_event("startup")
 def startup_event():
-    thread = threading.Thread(target=serve_grpc, daemon=True)
+    thread = threading.Thread(target=serve, daemon=True)
     thread.start()
 
 
