@@ -3,7 +3,10 @@ import Login from "./Login";
 import Signup from "./Signup";
 
 function getAvailable(lot) {
-  return lot.spaces.filter((s) => !s.occupied).length;
+  if (lot.spaces && lot.spaces.length > 0) {
+    return lot.spaces.filter((s) => !s.occupied).length;
+  }
+  return lot.availableSpaces ?? 0;
 }
 
 function isPeakHour() {
@@ -240,7 +243,13 @@ export default function App() {
         // this update finds the right lot in the array and attaches the spaces to it
         setLots((prev) =>
           prev.map((lot) =>
-            lot.id === selectedLotId ? { ...lot, spaces: mapped } : lot,
+            lot.id === selectedLotId
+              ? {
+                  ...lot,
+                  spaces: mapped,
+                  availableSpaces: mapped.filter((sp) => !sp.occupied).length,
+                }
+              : lot,
           ),
         );
       });
@@ -337,16 +346,19 @@ export default function App() {
     }
 
     setLots((prev) =>
-      prev.map((lot) =>
-        lot.id === currentLot.id
-          ? {
-              ...lot,
-              spaces: lot.spaces.map((sp) =>
-                sp.id === space.id ? { ...sp, occupied: true } : sp,
-              ),
-            }
-          : lot,
-      ),
+      prev.map((lot) => {
+        if (lot.id !== currentLot.id) return lot;
+
+        const updatedSpaces = lot.spaces.map((sp) =>
+          sp.id === space.id ? { ...sp, occupied: true } : sp,
+        );
+
+        return {
+          ...lot,
+          spaces: updatedSpaces,
+          availableSpaces: updatedSpaces.filter((sp) => !sp.occupied).length,
+        };
+      }),
     );
     fetch(`http://localhost:8002/reservations/user/${user.id}`)
       .then((res) => res.json())
@@ -390,7 +402,13 @@ export default function App() {
           }));
           setLots((prev) =>
             prev.map((lot) =>
-              lot.id === selectedLotId ? { ...lot, spaces: mapped } : lot,
+              lot.id === selectedLotId
+                ? {
+                    ...lot,
+                    spaces: mapped,
+                    availableSpaces: mapped.filter((sp) => !sp.occupied).length,
+                  }
+                : lot,
             ),
           );
         });
