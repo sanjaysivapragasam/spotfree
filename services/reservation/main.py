@@ -242,7 +242,7 @@ def get_user_reservations(user_id: int):
         FROM reservations r
         JOIN parking_spaces ps ON ps.id = r.space_id
         JOIN parking_lots pl ON pl.id = ps.lot_id
-        WHERE r.user_id = %s
+        WHERE r.user_id = %s AND r.status = 'active'
         ORDER BY r.created_at DESC
     """, (user_id,))
     rows = cur.fetchall()
