@@ -346,17 +346,21 @@ export default function App() {
           : lot,
       ),
     );
-    setReservations((prev) => [
-      {
-        id: Date.now(),
-        space: space.label,
-        lot: currentLot.name,
-        hours,
-        total,
-        time: new Date().toLocaleTimeString(),
-      },
-      ...prev,
-    ]);
+    fetch(`http://localhost:8002/reservations/user/${user.id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        const mapped = data.map((r) => ({
+          id: r.id,
+          space: r.space_id,
+          lot: currentLot.name,
+          hours: Math.round(
+            (new Date(r.end_time) - new Date(r.start_time)) / 3600000,
+          ),
+          total: r.total_price,
+          time: new Date(r.start_time).toLocaleTimeString(),
+        }));
+        setReservations(mapped);
+      });
     setSelectedSpace(null);
     setToast(`Reserved ${space.label} at ${currentLot.name} — $${total}`);
   }
