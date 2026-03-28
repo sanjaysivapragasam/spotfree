@@ -11,7 +11,7 @@ function getAvailable(lot) {
 
 function isPeakHour() {
   const h = new Date().getHours();
-  return h >= 8 && h < 18;
+  return h >= lot.peakStart && h < lot.peakEnd;
 }
 
 function getTypeIcon(type) {
@@ -23,7 +23,7 @@ function getTypeIcon(type) {
 // Reserve Modal
 function ReserveModal({ space, lot, onClose, onConfirm }) {
   const [hours, setHours] = useState(2);
-  const peak = isPeakHour();
+  const peak = isPeakHourForLot(lot);
   const rate = peak ? lot.peakRate : lot.baseRate;
   const total = (rate * hours).toFixed(2);
 
@@ -48,13 +48,18 @@ function ReserveModal({ space, lot, onClose, onConfirm }) {
           <hr style={s.hr} />
 
           <div style={s.rateRow}>
-            <span style={s.rateLabel}>
-              {peak ? "⚠ Peak hours" : "Off-peak hours"}
-            </span>
+            <span style={s.rateLabel}>Current rate</span>
             <span
               style={{ ...s.rateValue, color: peak ? "#e07b00" : "#16a34a" }}
             >
-              ${rate.toFixed(2)} / hr
+              {peak ? "⚠ Peak" : "✓ Off-Peak"} — ${rate.toFixed(2)} / hr
+            </span>
+          </div>
+
+          <div style={s.rateRow}>
+            <span style={s.rateLabel}>Peak window</span>
+            <span style={s.rateLabel}>
+              {lot.peakStart}:00 - {lot.peakEnd}:00
             </span>
           </div>
 
@@ -258,7 +263,12 @@ export default function App() {
     ]).then(([lotsData, ratesData]) => {
       const ratesMap = {};
       ratesData.forEach((r) => {
-        ratesMap[r.lot_id] = { baseRate: r.base_rate, peakRate: r.peak_rate };
+        ratesMap[r.lot_id] = {
+          baseRate: r.base_rate,
+          peakRate: r.peak_rate,
+          peakStart: r.peak_start,
+          peakEnd: r.peak_end,
+        };
       });
       const mapped = lotsData.map((lot) => ({
         id: lot.id,
@@ -268,6 +278,8 @@ export default function App() {
         availableSpaces: lot.available_spaces,
         baseRate: ratesMap[lot.id]?.baseRate ?? 3.0,
         peakRate: ratesMap[lot.id]?.peakRate ?? 6.0,
+        peakStart: ratesMap[lot.id]?.peakStart ?? 8,
+        peakEnd: ratesMap[lot.id]?.peakEnd ?? 18,
         spaces: [],
       }));
       setLots(mapped);
@@ -292,7 +304,7 @@ export default function App() {
     lots.find((l) => l.id === selectedLotId) || lots[0] || null;
   const totalAvail = lots.reduce((sum, l) => sum + getAvailable(l), 0);
   const totalSpaces = lots.reduce((sum, l) => sum + l.totalSpaces, 0);
-  const peak = isPeakHour();
+  const peak = currentLot ? isPeakHourForLot(currentLot) : false;
 
   async function handleConfirm(space, hours, total) {
     const now = new Date();
