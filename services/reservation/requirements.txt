@@ -5,3 +5,4 @@ pydantic
 requests
 grpcio
 grpcio-tools
+pika
