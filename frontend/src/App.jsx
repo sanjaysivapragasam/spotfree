@@ -201,14 +201,20 @@ export default function App() {
       .then((data) => {
         // Backend uses snake_case, frontend expects camelCase
         // so the fields need to be mapped
+        // the different rates from pricing service
+        const rates = {
+          1: { baseRate: 3.0, peakRate: 6.0 },
+          2: { baseRate: 2.0, peakRate: 4.5 },
+          3: { baseRate: 5.0, peakRate: 8.0 },
+        };
         const mapped = data.map((lot) => ({
           id: lot.id,
           name: lot.name,
           location: lot.location,
           totalSpaces: lot.total_spaces,
           availableSpaces: lot.available_spaces,
-          baseRate: 3.0, // from pricing_rules
-          peakRate: 6.0,
+          baseRate: rates[lot.id]?.baseRate ?? 3.0,
+          peakRate: rates[lot.id]?.peakRate ?? 6.0,
           spaces: [], // loaded separately
         }));
         setLots(mapped);
@@ -301,6 +307,38 @@ export default function App() {
     ]);
     setSelectedSpace(null);
     setToast(`Reserved ${space.label} at ${currentLot.name} — $${total}`);
+  }
+
+  // function for a user to cancel a reservation they made
+  // the db entry needs to be removed and the space needs to be available again
+  async function handleCancel(reservationId) {
+    const response = await fetch(
+      `http://localhost:8002/reservations/${reservationId}`,
+      {
+        method: "DELETE",
+      },
+    );
+    if (response.ok) {
+      setReservations((prev) => prev.filter((r) => r.id !== reservationId));
+      setToast("Reservation cancelled");
+      fetch(`http://localhost:8001/lots/${selectedLotId}/spaces`)
+        .then((res) => res.json())
+        .then((data) => {
+          const mapped = data.map((sp) => ({
+            id: sp.id,
+            label: sp.space_number,
+            occupied: sp.is_occupied,
+            type: sp.space_type,
+          }));
+          setLots((prev) =>
+            prev.map((lot) =>
+              lot.id === selectedLotId ? { ...lot, spaces: mapped } : lot,
+            ),
+          );
+        });
+    } else {
+      setToast("Failed to cancel reservation");
+    }
   }
 
   // Prevent blank flash on first render
@@ -519,6 +557,12 @@ export default function App() {
                       <div style={s.resDuration}>{r.hours} hr</div>
                       <div style={s.resTotal}>${r.total}</div>
                       <div style={s.resStatus}>Active</div>
+                      <button
+                        onClick={() => handleCancel(r.id)}
+                        style={s.cancelResBtn}
+                      >
+                        Cancel
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -941,9 +985,22 @@ const s = {
     background: "#f0fdf4",
     border: "1px solid #bbf7d0",
     borderRadius: 4,
-    padding: "2px 8px",
+    padding: "2px 25px",
     display: "inline-block",
   },
+
+  cancelResBtn: {
+    marginTop: 8,
+    padding: "4px 12px",
+    borderRadius: 6,
+    border: "1px solid #fecaca",
+    background: "#fff",
+    color: "#dc2626",
+    fontSize: 12,
+    cursor: "pointer",
+    marginLeft: "5px",
+  },
+
   authRoot: {
     minHeight: "100vh",
     display: "flex",
