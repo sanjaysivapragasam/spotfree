@@ -247,9 +247,9 @@ def get_user_reservations(user_id: int):
     rows = cur.fetchall()
     conn.close()
 
-    # if no reservation data is returned, it would raise an HTTP exception
+    # if no reservation data is returned
     if not rows:
-        raise HTTPException(status_code=404, detail="No reservations found for this user")
+        return [] # return empty array when user has no reservations yet
 
     # Organizing the SQL data into a Python dictionary to be returned when a get user reservations request is made.
     return [
