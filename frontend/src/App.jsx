@@ -269,9 +269,35 @@ export default function App() {
       .catch(() => {});
   }, [user]);
 
+  // fetching the rates for the lots
+  useEffect(() => {
+    Promise.all([
+      fetch("http://localhost:8001/lots").then((r) => r.json()),
+      fetch("http://localhost:8003/price/lots").then((r) => r.json()),
+    ]).then(([lotsData, ratesData]) => {
+      const ratesMap = {};
+      ratesData.forEach((r) => {
+        ratesMap[r.lot_id] = { baseRate: r.base_rate, peakRate: r.peak_rate };
+      });
+      const mapped = lotsData.map((lot) => ({
+        id: lot.id,
+        name: lot.name,
+        location: lot.location,
+        totalSpaces: lot.total_spaces,
+        availableSpaces: lot.available_spaces,
+        baseRate: ratesMap[lot.id]?.baseRate ?? 3.0,
+        peakRate: ratesMap[lot.id]?.peakRate ?? 6.0,
+        spaces: [],
+      }));
+      setLots(mapped);
+      if (mapped.length > 0) setSelectedLotId(mapped[0].id);
+    });
+  }, []);
+
   function handleLogin(userData) {
     localStorage.setItem("spotfree_user", JSON.stringify(userData));
     setUser(userData);
+    setToast(null); // to ensure previous logout message doesnt show again on next login
   }
 
   const handleLogout = () => {

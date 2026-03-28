@@ -108,6 +108,9 @@ class PricingService(pricing_pb2_grpc.PricingServiceServicer):
             hours=hours
         )
     
+    
+    
+
 
 def serve():
     """
@@ -135,7 +138,28 @@ def serve():
 def startup_event():
     thread = threading.Thread(target=serve, daemon=True)
     thread.start()
-
+@app.get("/price/lots")
+def get_all_rates():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT pr.lot_id, pl.name, pr.base_rate, pr.peak_rate, pr.peak_start, pr.peak_end
+        FROM pricing_rules pr
+        JOIN parking_lots pl ON pl.id = pr.lot_id
+    """)
+    rows = cur.fetchall()
+    conn.close()
+    return [
+        {
+            "lot_id": r[0],
+            "lot_name": r[1],
+            "base_rate": float(r[2]),
+            "peak_rate": float(r[3]),
+            "peak_start": r[4],
+            "peak_end": r[5]
+        }
+        for r in rows
+    ]
 
 # start gRPC server if run directly
 if __name__ == "__main__":
