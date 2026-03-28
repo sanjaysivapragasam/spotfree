@@ -59,17 +59,41 @@ INSERT INTO parking_lots (name, location, total_spaces) VALUES
     ('Mall Parking',   '456 King St', 50),
     ('Airport P1',     '789 Airport Rd', 100);
 
-INSERT INTO parking_spaces (lot_id, space_number, is_occupied, space_type) VALUES
-    (1, 'A1', false, 'standard'),
-    (1, 'A2', true,  'standard'),
-    (1, 'A3', false, 'standard'),
-    (1, 'A4', false, 'ev'),
-    (1, 'A5', true,  'accessible'),
-    (2, 'B1', false, 'standard'),
-    (2, 'B2', false, 'standard'),
-    (2, 'B3', true,  'standard'),
-    (3, 'C1', false, 'standard'),
-    (3, 'C2', false, 'ev');
+INSERT INTO parking_spaces (lot_id, space_number, is_occupied, space_type)
+SELECT
+    1,
+    'A' || gs,
+    CASE WHEN gs IN (2, 5, 9, 14, 18) THEN TRUE ELSE FALSE END,
+    CASE
+        WHEN gs IN (4, 12) THEN 'ev'
+        WHEN gs IN (5, 15) THEN 'accessible'
+        ELSE 'standard'
+    END
+FROM generate_series(1, 20) AS gs;
+
+INSERT INTO parking_spaces (lot_id, space_number, is_occupied, space_type)
+SELECT
+    2,
+    'B' || gs,
+    CASE WHEN gs IN (3, 7, 11, 19, 22, 28, 31, 36, 42, 47) THEN TRUE ELSE FALSE END,
+    CASE
+        WHEN gs IN (8, 16, 24, 40) THEN 'ev'
+        WHEN gs IN (5, 25, 45) THEN 'accessible'
+        ELSE 'standard'
+    END
+FROM generate_series(1, 50) AS gs;
+
+INSERT INTO parking_spaces (lot_id, space_number, is_occupied, space_type)
+SELECT
+    3,
+    'C' || gs,
+    CASE WHEN gs IN (2, 9, 14, 20, 27, 35, 41, 49, 56, 63, 71, 84, 93, 98) THEN TRUE ELSE FALSE END,
+    CASE
+        WHEN gs IN (10, 30, 50, 70, 90) THEN 'ev'
+        WHEN gs IN (15, 45, 75, 95) THEN 'accessible'
+        ELSE 'standard'
+    END
+FROM generate_series(1, 100) AS gs;
 
 INSERT INTO pricing_rules (lot_id, base_rate, peak_rate, peak_start, peak_end) VALUES
     (1, 3.00, 6.00, 8, 18),
