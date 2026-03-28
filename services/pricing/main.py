@@ -20,7 +20,6 @@ app.add_middleware(
 )
 
 # FastAPI health check (optional)
-app = FastAPI(title="Pricing Service")
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "pricing"}
