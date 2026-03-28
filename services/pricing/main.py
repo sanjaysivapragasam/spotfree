@@ -130,6 +130,13 @@ def serve():
     # keep the server running indefinitely
     server.wait_for_termination()
 
+# used to trigger launching the grpc server in a background thread once uvicorn starts FastAPI
+@app.on_event("startup")
+def startup_event():
+    thread = threading.Thread(target=serve_grpc, daemon=True)
+    thread.start()
+
+
 # start gRPC server if run directly
 if __name__ == "__main__":
     serve()

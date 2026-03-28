@@ -60,6 +60,7 @@ services:
     restart: always
     ports:
       - "8003:8000"
+      - "50051:50051"
     depends_on:
       - db
     environment:
