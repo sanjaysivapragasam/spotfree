@@ -101,6 +101,9 @@ class PricingService(pricing_pb2_grpc.PricingServiceServicer):
         cur.close()
         conn.close()
 
+        # debug statement
+        print(f"lot={lot_id} start={start_time} end={end_time} hours={hours} rate={rate} total={total}")
+
         # return the gRPC response - including total price, rate type, and number of hours
         return pricing_pb2.PriceRsp(
             total=total,

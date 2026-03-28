@@ -177,7 +177,9 @@ export default function App() {
   const [selectedSpace, setSelectedSpace] = useState(null);
   const [toast, setToast] = useState(null);
   const [reservations, setReservations] = useState([]);
-  const [tab, setTab] = useState("map");
+  const [tab, setTab] = useState(
+    () => localStorage.getItem("spotfree_tab") || "map",
+  );
 
   // ─Auth state (localStorage instead of Firebase)
   const [user, setUser] = useState(() => {
@@ -225,7 +227,7 @@ export default function App() {
   // use effect for if the selectedLotId changes, so if the user clicks a different lot in the sidebar
   // the if statement prevents it running before a lot is selected
   useEffect(() => {
-    if (!selectedLotId) return;
+    if (!selectedLotId || lots.length === 0) return;
     fetch(`http://localhost:8001/lots/${selectedLotId}/spaces`)
       .then((res) => res.json())
       .then((data) => {
