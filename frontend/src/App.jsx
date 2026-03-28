@@ -244,6 +244,31 @@ export default function App() {
       });
   }, [selectedLotId]);
 
+  // useEffect for reservations to get the reservations of a user
+  useEffect(() => {
+    if (!user) return;
+    fetch(`http://localhost:8002/reservations/user/${user.id}`)
+      .then((res) => {
+        if (!res.ok) return [];
+        return res.json();
+      })
+      .then((data) => {
+        if (!data || data.length === 0) return;
+        const mapped = data.map((r) => ({
+          id: r.id,
+          space: r.space_id,
+          lot: "—",
+          hours: Math.round(
+            (new Date(r.end_time) - new Date(r.start_time)) / 3600000,
+          ),
+          total: r.total_price,
+          time: new Date(r.start_time).toLocaleTimeString(),
+        }));
+        setReservations(mapped);
+      })
+      .catch(() => {});
+  }, [user]);
+
   function handleLogin(userData) {
     localStorage.setItem("spotfree_user", JSON.stringify(userData));
     setUser(userData);
@@ -256,7 +281,8 @@ export default function App() {
     setToast("Logged out successfully");
   };
 
-  const currentLot = lots.find((l) => l.id === selectedLotId);
+  const currentLot =
+    lots.find((l) => l.id === selectedLotId) || lots[0] || null;
   const totalAvail = lots.reduce((sum, l) => sum + getAvailable(l), 0);
   const totalSpaces = lots.reduce((sum, l) => sum + l.totalSpaces, 0);
   const peak = isPeakHour();
@@ -387,6 +413,9 @@ export default function App() {
       </div>
     );
   }
+
+  // loading guard for the UI
+  if (!currentLot) return <div style={{ padding: 40 }}>Loading...</div>;
 
   // Main app UI
   return (
