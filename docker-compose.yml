@@ -46,10 +46,13 @@ services:
     depends_on:
       - db
       - parking-lot
+      - rabbitmq
+      - pricing
     environment:
       DATABASE_URL: postgresql://admin:secret@db:5432/spotfree
-      PARKING_LOT_URL: http://parking-lot:8000
-
+      PARKING_LOT_SERVICE_URL: http://parking-lot:8000
+      PRICING_SERVICE_URL: pricing:50051
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
   # ─── PRICING SERVICE ────────────────────────────────────────────────────────
   pricing:
     build: ./services/pricing

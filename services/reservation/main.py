@@ -170,7 +170,7 @@ def create_reservation(body: ReservationCreate):
         # The reservation service is considered the grpc client, who sends a price request to the grpc server (pricing service)
         # with the lot_id, start_time and end_time. The pricing service can determine the pricing based on these parameters
         # and it responds with the total price, rate type (peak or off-peak) and hours booked for.
-        price_response = stub.CalculatePrice(pricing_pb2.PriceRequest(
+        price_response = stub.CalculatePrice(pricing_pb2.PriceReq(
             lot_id=lot_id,
             start_time=body.start_time,
             end_time=body.end_time
