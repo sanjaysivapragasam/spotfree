@@ -2,86 +2,6 @@ import { useState, useEffect } from "react";
 import Login from "./Login";
 import Signup from "./Signup";
 
-
-// ─── Hardcoded Data ──────────────────────────────────────────────────────────
-const LOTS = [
-  {
-    id: 1,
-    name: "Downtown Lot A",
-    location: "123 Main St",
-    totalSpaces: 20,
-    spaces: [
-      { id: 1, label: "A1", occupied: false, type: "standard" },
-      { id: 2, label: "A2", occupied: true, type: "standard" },
-      { id: 3, label: "A3", occupied: false, type: "standard" },
-      { id: 4, label: "A4", occupied: false, type: "ev" },
-      { id: 5, label: "A5", occupied: true, type: "accessible" },
-      { id: 6, label: "A6", occupied: false, type: "standard" },
-      { id: 7, label: "A7", occupied: true, type: "standard" },
-      { id: 8, label: "A8", occupied: false, type: "standard" },
-      { id: 9, label: "A9", occupied: true, type: "standard" },
-      { id: 10, label: "A10", occupied: false, type: "standard" },
-      { id: 11, label: "A11", occupied: false, type: "ev" },
-      { id: 12, label: "A12", occupied: true, type: "standard" },
-      { id: 13, label: "A13", occupied: false, type: "standard" },
-      { id: 14, label: "A14", occupied: false, type: "standard" },
-      { id: 15, label: "A15", occupied: true, type: "standard" },
-      { id: 16, label: "A16", occupied: false, type: "accessible" },
-      { id: 17, label: "A17", occupied: false, type: "standard" },
-      { id: 18, label: "A18", occupied: true, type: "standard" },
-      { id: 19, label: "A19", occupied: false, type: "standard" },
-      { id: 20, label: "A20", occupied: false, type: "ev" },
-    ],
-    baseRate: 3.0,
-    peakRate: 6.0,
-    peakHours: "8am – 6pm",
-  },
-  {
-    id: 2,
-    name: "Mall Parking",
-    location: "456 King St",
-    totalSpaces: 12,
-    spaces: [
-      { id: 21, label: "B1", occupied: false, type: "standard" },
-      { id: 22, label: "B2", occupied: false, type: "standard" },
-      { id: 23, label: "B3", occupied: true, type: "standard" },
-      { id: 24, label: "B4", occupied: false, type: "ev" },
-      { id: 25, label: "B5", occupied: true, type: "standard" },
-      { id: 26, label: "B6", occupied: false, type: "accessible" },
-      { id: 27, label: "B7", occupied: false, type: "standard" },
-      { id: 28, label: "B8", occupied: true, type: "standard" },
-      { id: 29, label: "B9", occupied: false, type: "standard" },
-      { id: 30, label: "B10", occupied: true, type: "standard" },
-      { id: 31, label: "B11", occupied: false, type: "ev" },
-      { id: 32, label: "B12", occupied: false, type: "standard" },
-    ],
-    baseRate: 2.0,
-    peakRate: 4.5,
-    peakHours: "9am – 5pm",
-  },
-  {
-    id: 3,
-    name: "Airport P1",
-    location: "789 Airport Rd",
-    totalSpaces: 10,
-    spaces: [
-      { id: 33, label: "C1", occupied: false, type: "standard" },
-      { id: 34, label: "C2", occupied: false, type: "ev" },
-      { id: 35, label: "C3", occupied: true, type: "standard" },
-      { id: 36, label: "C4", occupied: false, type: "standard" },
-      { id: 37, label: "C5", occupied: true, type: "accessible" },
-      { id: 38, label: "C6", occupied: false, type: "standard" },
-      { id: 39, label: "C7", occupied: true, type: "standard" },
-      { id: 40, label: "C8", occupied: false, type: "standard" },
-      { id: 41, label: "C9", occupied: false, type: "ev" },
-      { id: 42, label: "C10", occupied: true, type: "standard" },
-    ],
-    baseRate: 5.0,
-    peakRate: 8.0,
-    peakHours: "6am – 10pm",
-  },
-];
-
 function getAvailable(lot) {
   return lot.spaces.filter((s) => !s.occupied).length;
 }
@@ -97,7 +17,7 @@ function getTypeIcon(type) {
   return null;
 }
 
-// ─── Reserve Modal ───────────────────────────────────────────────────────────
+// Reserve Modal
 function ReserveModal({ space, lot, onClose, onConfirm }) {
   const [hours, setHours] = useState(2);
   const peak = isPeakHour();
@@ -174,7 +94,7 @@ function ReserveModal({ space, lot, onClose, onConfirm }) {
   );
 }
 
-// ─── Toast ───────────────────────────────────────────────────────────────────
+//  Toast
 function Toast({ message, onDone }) {
   useEffect(() => {
     const t = setTimeout(onDone, 3000);
@@ -183,7 +103,7 @@ function Toast({ message, onDone }) {
   return <div style={s.toast}>{message}</div>;
 }
 
-// ─── Space Cell ──────────────────────────────────────────────────────────────
+//  Space Cell
 function SpaceCell({ space, onSelect }) {
   const [hovered, setHovered] = useState(false);
   const available = !space.occupied;
@@ -216,7 +136,7 @@ function SpaceCell({ space, onSelect }) {
   );
 }
 
-// ─── Lot Card ────────────────────────────────────────────────────────────────
+// Lot Card
 function LotCard({ lot, selected, onClick }) {
   const avail = getAvailable(lot);
   const pct = Math.round((avail / lot.totalSpaces) * 100);
@@ -249,16 +169,17 @@ function LotCard({ lot, selected, onClick }) {
   );
 }
 
-// ─── App ─────────────────────────────────────────────────────────────────────
+// ─App
 export default function App() {
-  const [lots, setLots] = useState(LOTS);
+  // initialize with empty array, need HTTP GET API call to retrieve info
+  const [lots, setLots] = useState([]);
   const [selectedLotId, setSelectedLotId] = useState(1);
   const [selectedSpace, setSelectedSpace] = useState(null);
   const [toast, setToast] = useState(null);
   const [reservations, setReservations] = useState([]);
   const [tab, setTab] = useState("map");
 
-  // ── Auth state (localStorage instead of Firebase) ──────────────────────────
+  // ─Auth state (localStorage instead of Firebase)
   const [user, setUser] = useState(() => {
     const stored = localStorage.getItem("spotfree_user");
     return stored ? JSON.parse(stored) : null;
@@ -271,6 +192,52 @@ export default function App() {
     setReady(true);
   }, []);
 
+  // useEffect for fetching all of the lots
+  // this runs once, when the App first loads
+  // calls the parking lot service to get the JSON array of all the lots and their data, and puts it into state
+  useEffect(() => {
+    fetch("http://localhost:8001/lots")
+      .then((res) => res.json())
+      .then((data) => {
+        // Backend uses snake_case, frontend expects camelCase
+        // so the fields need to be mapped
+        const mapped = data.map((lot) => ({
+          id: lot.id,
+          name: lot.name,
+          location: lot.location,
+          totalSpaces: lot.total_spaces,
+          availableSpaces: lot.available_spaces,
+          baseRate: 3.0, // from pricing_rules
+          peakRate: 6.0,
+          spaces: [], // loaded separately
+        }));
+        setLots(mapped);
+        if (mapped.length > 0) setSelectedLotId(mapped[0].id);
+      });
+  }, []); // empty [] at the end means run once (don't re-run)
+
+  // use effect for if the selectedLotId changes, so if the user clicks a different lot in the sidebar
+  // the if statement prevents it running before a lot is selected
+  useEffect(() => {
+    if (!selectedLotId) return;
+    fetch(`http://localhost:8001/lots/${selectedLotId}/spaces`)
+      .then((res) => res.json())
+      .then((data) => {
+        const mapped = data.map((sp) => ({
+          id: sp.id,
+          label: sp.space_number,
+          occupied: sp.is_occupied,
+          type: sp.space_type,
+        }));
+        // this update finds the right lot in the array and attaches the spaces to it
+        setLots((prev) =>
+          prev.map((lot) =>
+            lot.id === selectedLotId ? { ...lot, spaces: mapped } : lot,
+          ),
+        );
+      });
+  }, [selectedLotId]);
+
   function handleLogin(userData) {
     localStorage.setItem("spotfree_user", JSON.stringify(userData));
     setUser(userData);
@@ -282,7 +249,6 @@ export default function App() {
     setUser(null);
     setToast("Logged out successfully");
   };
-  // ───────────────────────────────────────────────────────────────────────────
 
   const currentLot = lots.find((l) => l.id === selectedLotId);
   const totalAvail = lots.reduce((sum, l) => sum + getAvailable(l), 0);
@@ -300,8 +266,8 @@ export default function App() {
         user_id: user.id,
         space_id: space.id,
         start_time: now.toISOString(),
-        end_time: end.toISOString()
-      })
+        end_time: end.toISOString(),
+      }),
     });
 
     if (!response.ok) {
@@ -345,7 +311,6 @@ export default function App() {
     return (
       <div style={s.authRoot}>
         <div style={s.authWrapper}>
-
           <div style={s.logoAuth}>
             <div style={s.logoMark}>S</div>
             <span style={s.logoText}>SpotFree</span>
@@ -380,7 +345,6 @@ export default function App() {
               </>
             )}
           </div>
-
         </div>
       </div>
     );
@@ -398,7 +362,9 @@ export default function App() {
 
         {/* Logged-in user info */}
         <div style={s.userInfo}>
-          <span>Welcome, {user.name} ({user.email})</span>
+          <span>
+            Welcome, {user.name} ({user.email})
+          </span>
           <button style={s.logoutBtn} onClick={handleLogout}>
             Logout
           </button>
@@ -433,11 +399,16 @@ export default function App() {
             Map
           </button>
           <button
-            style={{ ...s.navBtn, ...(tab === "reservations" ? s.navBtnActive : {}) }}
+            style={{
+              ...s.navBtn,
+              ...(tab === "reservations" ? s.navBtnActive : {}),
+            }}
             onClick={() => setTab("reservations")}
           >
             My Reservations
-            {reservations.length > 0 && <span style={s.navBadge}>{reservations.length}</span>}
+            {reservations.length > 0 && (
+              <span style={s.navBadge}>{reservations.length}</span>
+            )}
           </button>
         </nav>
       </header>
@@ -505,16 +476,24 @@ export default function App() {
                   }}
                 >
                   {peak ? "⚠ Peak" : "✓ Off-Peak"} — $
-                  {peak ? currentLot.peakRate.toFixed(2) : currentLot.baseRate.toFixed(2)}
+                  {peak
+                    ? currentLot.peakRate.toFixed(2)
+                    : currentLot.baseRate.toFixed(2)}
                   /hr
                 </div>
               </div>
               <div style={s.grid}>
                 {currentLot.spaces.map((space) => (
-                  <SpaceCell key={space.id} space={space} onSelect={setSelectedSpace} />
+                  <SpaceCell
+                    key={space.id}
+                    space={space}
+                    onSelect={setSelectedSpace}
+                  />
                 ))}
               </div>
-              <p style={s.gridHint}>Click a green space to make a reservation</p>
+              <p style={s.gridHint}>
+                Click a green space to make a reservation
+              </p>
             </section>
           </>
         ) : (
@@ -563,7 +542,7 @@ export default function App() {
   );
 }
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
+// Styles
 const s = {
   root: {
     minHeight: "100vh",
