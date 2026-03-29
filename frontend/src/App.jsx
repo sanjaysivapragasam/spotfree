@@ -306,6 +306,30 @@ export default function App() {
   const totalSpaces = lots.reduce((sum, l) => sum + l.totalSpaces, 0);
   const peak = currentLot ? isPeakHourForLot(currentLot) : false;
 
+  // re-fetches spaces for the current lot from the DB and updates state
+  // added to fix bug where space would show as occupied on another user's end
+  async function refreshCurrentLot() {
+    const res = await fetch(`http://localhost:8001/lots/${selectedLotId}/spaces`);
+    const data = await res.json();
+    const mapped = data.map((sp) => ({
+      id: sp.id,
+      label: sp.space_number,
+      occupied: sp.is_occupied,
+      type: sp.space_type,
+    }));
+    setLots((prev) =>
+      prev.map((lot) =>
+        lot.id === selectedLotId
+          ? {
+              ...lot,
+              spaces: mapped,
+              availableSpaces: mapped.filter((sp) => !sp.occupied).length,
+            }
+          : lot,
+      ),
+    );
+  }
+
   async function handleConfirm(space, hours, total) {
     const now = new Date();
     const end = new Date(now.getTime() + hours * 60 * 60 * 1000);
@@ -327,21 +351,9 @@ export default function App() {
       return;
     }
 
-    setLots((prev) =>
-      prev.map((lot) => {
-        if (lot.id !== currentLot.id) return lot;
+    // re-fetch spaces from DB so the grid reflects real occupancy
+    await refreshCurrentLot();
 
-        const updatedSpaces = lot.spaces.map((sp) =>
-          sp.id === space.id ? { ...sp, occupied: true } : sp,
-        );
-
-        return {
-          ...lot,
-          spaces: updatedSpaces,
-          availableSpaces: updatedSpaces.filter((sp) => !sp.occupied).length,
-        };
-      }),
-    );
     fetch(`http://localhost:8002/reservations/user/${user.id}`)
       .then((res) => res.json())
       .then((data) => {
@@ -357,6 +369,7 @@ export default function App() {
         }));
         setReservations(mapped);
       });
+
     setSelectedSpace(null);
     setToast(`Reserved ${space.label} at ${currentLot.name} — $${total}`);
   }
