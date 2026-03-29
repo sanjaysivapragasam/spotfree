@@ -421,30 +421,11 @@ export default function App() {
         method: "DELETE",
       },
     );
+
     if (response.ok) {
       setReservations((prev) => prev.filter((r) => r.id !== reservationId));
       setToast("Reservation cancelled");
-      fetch(`http://localhost:8001/lots/${selectedLotId}/spaces`)
-        .then((res) => res.json())
-        .then((data) => {
-          const mapped = data.map((sp) => ({
-            id: sp.id,
-            label: sp.space_number,
-            occupied: sp.is_occupied,
-            type: sp.space_type,
-          }));
-          setLots((prev) =>
-            prev.map((lot) =>
-              lot.id === selectedLotId
-                ? {
-                    ...lot,
-                    spaces: mapped,
-                    availableSpaces: mapped.filter((sp) => !sp.occupied).length,
-                  }
-                : lot,
-            ),
-          );
-        });
+      await refreshCurrentLot();
     } else {
       setToast("Failed to cancel reservation");
     }
