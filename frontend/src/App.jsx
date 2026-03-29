@@ -232,14 +232,21 @@ export default function App() {
 
   // useEffect for reservations to get the reservations of a user
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setReservations([]);
+      return;
+    }
     fetch(`http://localhost:8002/reservations/user/${user.id}`)
       .then((res) => {
         if (!res.ok) return [];
         return res.json();
       })
       .then((data) => {
-        if (!data || data.length === 0) return;
+        if (!data || data.length === 0) {
+          setReservations([]);
+          return;
+        }
+
         const mapped = data.map((r) => ({
           id: r.id,
           space: r.space_number,
@@ -250,6 +257,7 @@ export default function App() {
           total: r.total_price,
           time: new Date(r.start_time).toLocaleTimeString(),
         }));
+
         setReservations(mapped);
       })
       .catch(() => {});
@@ -297,6 +305,7 @@ export default function App() {
     localStorage.removeItem("token");
     localStorage.removeItem("spotfree_user");
     setUser(null);
+    setReservations([]);
     setToast("Logged out successfully");
   };
 
