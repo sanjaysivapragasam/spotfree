@@ -209,12 +209,14 @@ export default function App() {
     fetch(`http://localhost:8001/lots/${selectedLotId}/spaces`)
       .then((res) => res.json())
       .then((data) => {
-        const mapped = data.map((sp) => ({
-          id: sp.id,
-          label: sp.space_number,
-          occupied: sp.is_occupied,
-          type: sp.space_type,
-        }));
+        const mapped = sortSpaces(
+          data.map((sp) => ({
+            id: sp.id,
+            label: sp.space_number,
+            occupied: sp.is_occupied,
+            type: sp.space_type,
+          })),
+        );
         // this update finds the right lot in the array and attaches the spaces to it
         setLots((prev) =>
           prev.map((lot) =>
@@ -295,6 +297,29 @@ export default function App() {
     });
   }, []);
 
+  // function to sort array to ensure sequential list of spaces
+  function sortSpaces(spaces) {
+    return [...spaces].sort((a, b) => {
+      const aMatch = a.label.match(/^([A-Z]+)(\d+)$/);
+      const bMatch = b.label.match(/^([A-Z]+)(\d+)$/);
+
+      if (!aMatch || !bMatch) {
+        return a.label.localeCompare(b.label);
+      }
+
+      const aPrefix = aMatch[1];
+      const bPrefix = bMatch[1];
+      const aNum = parseInt(aMatch[2], 10);
+      const bNum = parseInt(bMatch[2], 10);
+
+      if (aPrefix !== bPrefix) {
+        return aPrefix.localeCompare(bPrefix);
+      }
+
+      return aNum - bNum;
+    });
+  }
+
   function handleLogin(userData) {
     localStorage.setItem("spotfree_user", JSON.stringify(userData));
     setUser(userData);
@@ -318,14 +343,18 @@ export default function App() {
   // re-fetches spaces for the current lot from the DB and updates state
   // added to fix bug where space would show as occupied on another user's end
   async function refreshCurrentLot() {
-    const res = await fetch(`http://localhost:8001/lots/${selectedLotId}/spaces`);
+    const res = await fetch(
+      `http://localhost:8001/lots/${selectedLotId}/spaces`,
+    );
     const data = await res.json();
-    const mapped = data.map((sp) => ({
-      id: sp.id,
-      label: sp.space_number,
-      occupied: sp.is_occupied,
-      type: sp.space_type,
-    }));
+    const mapped = sortSpaces(
+      data.map((sp) => ({
+        id: sp.id,
+        label: sp.space_number,
+        occupied: sp.is_occupied,
+        type: sp.space_type,
+      })),
+    );
     setLots((prev) =>
       prev.map((lot) =>
         lot.id === selectedLotId
