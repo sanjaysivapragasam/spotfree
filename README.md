@@ -2,7 +2,7 @@
 SpotFree is a microservices-based parking management system. It allows users to view real-time availability, reserve spaces, and manage bookings. The architecture features a React frontend, FastAPI backend services, PostgreSQL, and RabbitMQ, containerized with Docker.
 
 ---
-### Dashboard
+### Dashboard and System Architecture
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/6548ee70-1759-44d5-b502-278a51bd8dd1" width="47%" style="vertical-align: middle;" />
