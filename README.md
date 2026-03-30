@@ -1,10 +1,7 @@
-# SpotFree
+## SpotFree
+SpotFree is a microservices-based parking management system. It allows users to view real-time availability, reserve spaces, and manage bookings. The architecture features a React frontend, FastAPI backend services, PostgreSQL, and RabbitMQ, containerized with Docker.
 
-**SpotFree** is a microservices-based parking management system. It allows users to view real-time availability, reserve spaces, and manage bookings. 
-
-The architecture features a **React** frontend, **FastAPI** backend services, **PostgreSQL**, and **RabbitMQ**, containerized with **Docker**.
 ---
-
 ### Dashboard
 
 <p align="center">
@@ -16,11 +13,12 @@ The architecture features a **React** frontend, **FastAPI** backend services, **
 ---
 
 ### Installation and Setup
+
 **Prerequisites:** Docker Desktop, Node.js (v18+), and npm.
 
 #### 1. Clone Repository
 ```bash
-git clone <https://github.com/sanjaysivapragasam/spotfree.git>
+git clone <your-repo-url>
 cd spotfree
 ```
 
@@ -28,10 +26,9 @@ cd spotfree
 ```bash
 docker compose up --build
 ```
-*Note: This initializes all microservices, PostgreSQL, and RabbitMQ. The first run may take a few minutes.*
+*Note: This starts all microservices, PostgreSQL, and RabbitMQ.*
 
 #### 3. Frontend Application
-In a new terminal:
 ```bash
 cd frontend
 npm install
@@ -53,21 +50,21 @@ npm run dev
 
 ---
 
-### Basic Usage
+### Usage
 1. **Register/Login:** Create an account on the local instance.
-2. **Reserve:** Select a parking lot and book an available space.
-3. **Manage:** View current bookings via the *My Reservations* tab.
+2. **Reserve:** Select a parking lot and book a space.
+3. **Manage:** View bookings via the *My Reservations* tab.
 
 ---
 
-### Maintenance Commands
+### Maintenance
 
 **Stop Services:**
 ```bash
 docker compose down
 ```
 
-**Full Reset (Wipe Data):**
+**Full Reset:**
 ```bash
 docker compose down -v
 docker compose up --build
