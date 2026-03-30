@@ -1,5 +1,13 @@
-Running SpotFree
-Prerequisites
+SpotFree
+
+SpotFree is a smart parking management system that enables users to view parking availability, reserve spaces, and manage bookings in real time. The system is built using a microservices architecture with a React frontend and FastAPI backend services, supported by PostgreSQL and RabbitMQ. It demonstrates key distributed systems concepts such as service decomposition, asynchronous messaging, and containerized deployment using Docker.
+
+<img width="512" height="368" alt="image" src="https://github.com/user-attachments/assets/049c2bbc-ece5-4d14-bbdd-56c3688dea0e" />
+<img width="512" height="117" alt="image" src="https://github.com/user-attachments/assets/c10aafa1-2662-4b55-af87-a8228db7afcf" />
+
+
+Running SpotFree Prerequisites:  
+
 Docker Desktop installed and running
 Node.js (v18 or higher) and npm installed
 1. Clone the Repository
