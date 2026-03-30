@@ -7,6 +7,11 @@ The system is built using a **microservices architecture** with a React frontend
 -----
 
 ## 🖥️ Dashboard
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/6548ee70-1759-44d5-b502-278a51bd8dd1" width="47%" style="vertical-align: middle;" />
+  &nbsp;&nbsp;
+  <img src="https://github.com/user-attachments/assets/3cd8a3d5-3294-496a-ac38-631ec90a3f96" width="47%" style="vertical-align: middle;" />
+</p>
 
 -----
 
