@@ -18,7 +18,7 @@ SpotFree is a microservices-based parking management system. It allows users to 
 
 #### 1. Clone Repository
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/sanjaysivapragasam/spotfree.git
 cd spotfree
 ```
 
