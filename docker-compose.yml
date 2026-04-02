@@ -88,6 +88,7 @@ services:
       - rabbitmq
     environment:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      PYTHONUNBUFFERED: "1"
 
   # ─── FRONTEND ───────────────────────────────────────────────────────────────
   frontend:

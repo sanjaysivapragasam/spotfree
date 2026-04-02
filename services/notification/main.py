@@ -15,10 +15,20 @@ RABBITMQ_URL = os.environ.get(
 # aka a callback function, and RabbitMQ calls it
 def on_message(channel, method, properties, body):
     data = json.loads(body) # body is raw message in bytes, json.loads converts to a python dictionary
-    print(f"[Notification] Event received: {data}")
+    event = data.get("event", "unknown")
+    user_id = data.get("user_id", "?")
+    space_id = data.get("space_id", "?")
+    total = data.get("total_price", "?")
+    
+    if event == "reservation_created":
+        print(f"[Notification] Reservation confirmed - User {user_id} booked a space for ${total}", flush=True)
+    elif event == "reservation_cancelled":
+        print(f"[Notification] Reservation cancelled!")
+    else:
+        print(f"[Notification] Event received: {data}")
     # delivery tag is an ID for each message so RabbitMQ knows which message is being ACK
     channel.basic_ack(delivery_tag=method.delivery_tag)
-
+    
 def start_consumer():
     while True: # run forever, since any consumer service always listens
         try:
